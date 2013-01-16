@@ -1,5 +1,6 @@
 package gr.antoniom.chronometer;
 
+
 /*
  * The Android chronometer widget revised so as to count milliseconds
  */
@@ -29,6 +30,8 @@ public class Chronometer extends TextView {
 
     private static final int TICK_WHAT = 2;
 
+    private long timeElapsed;
+    
     public Chronometer(Context context) {
         this (context, null, 0);
     }
@@ -68,6 +71,7 @@ public class Chronometer extends TextView {
     }
 
     public void start() {
+        mBase = SystemClock.elapsedRealtime();
         mStarted = true;
         updateRunning();
     }
@@ -98,7 +102,7 @@ public class Chronometer extends TextView {
     }
 
     private synchronized void updateText(long now) {
-        long timeElapsed = now - mBase;
+        timeElapsed = now - mBase;
         
         DecimalFormat df = new DecimalFormat("00");
         
@@ -157,4 +161,9 @@ public class Chronometer extends TextView {
             mOnChronometerTickListener.onChronometerTick(this);
         }
     }
+
+	public long getTimeElapsed() {
+		return timeElapsed;
+	}
+    
 }
