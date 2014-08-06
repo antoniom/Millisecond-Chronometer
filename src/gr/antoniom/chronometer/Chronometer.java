@@ -1,9 +1,6 @@
-package gr.antoniom.chronometer;
+package com.elacarte.game.tilegame;
 
-
-/*
- * The Android chronometer widget revised so as to count milliseconds
- */
+import java.text.DecimalFormat;
 
 import android.content.Context;
 import android.os.Handler;
@@ -11,23 +8,24 @@ import android.os.Message;
 import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.widget.TextView;
-import java.text.DecimalFormat;
 
+// credit: https://github.com/antoniom/Millisecond-Chronometer
 public class Chronometer extends TextView {
-    @SuppressWarnings("unused")
-	private static final String TAG = "Chronometer";
+    
+    private static final String TAG = "Chronometer";
 
     public interface OnChronometerTickListener {
-
         void onChronometerTick(Chronometer chronometer);
     }
 
+    private int hours = 0, minutes = 0, seconds = 0, milliseconds = 0;
     private long mBase;
     private boolean mVisible;
     private boolean mStarted;
     private boolean mRunning;
     private OnChronometerTickListener mOnChronometerTickListener;
-
+    private int[] gameTimeArray = new int[]{0, 0, 0};
+    
     private static final int TICK_WHAT = 2;
 
     private long timeElapsed;
@@ -76,6 +74,7 @@ public class Chronometer extends TextView {
         updateRunning();
     }
 
+    // set game timer to stopping time 
     public void stop() {
         mStarted = false;
         updateRunning();
@@ -89,14 +88,14 @@ public class Chronometer extends TextView {
 
     @Override
     protected void onDetachedFromWindow() {
-        super .onDetachedFromWindow();
+        super.onDetachedFromWindow();
         mVisible = false;
         updateRunning();
     }
-
+    
     @Override
     protected void onWindowVisibilityChanged(int visibility) {
-        super .onWindowVisibilityChanged(visibility);
+        super.onWindowVisibilityChanged(visibility);
         mVisible = visibility == VISIBLE;
         updateRunning();
     }
@@ -106,30 +105,42 @@ public class Chronometer extends TextView {
         
         DecimalFormat df = new DecimalFormat("00");
         
-        int hours = (int)(timeElapsed / (3600 * 1000));
+        hours = (int)(timeElapsed / (3600 * 1000));
         int remaining = (int)(timeElapsed % (3600 * 1000));
         
-        int minutes = (int)(remaining / (60 * 1000));
+        minutes = (int)(remaining / (60 * 1000));
         remaining = (int)(remaining % (60 * 1000));
         
-        int seconds = (int)(remaining / 1000);
+        seconds = (int)(remaining / 1000);
         remaining = (int)(remaining % (1000));
         
-        int milliseconds = (int)(((int)timeElapsed % 1000) / 100);
+        milliseconds = (int)(((int)timeElapsed % 1000) / 100);
         
         String text = "";
         
         if (hours > 0) {
-        	text += df.format(hours) + ":";
+            text += df.format(hours) + ":";
         }
         
-       	text += df.format(minutes) + ":";
-       	text += df.format(seconds) + ":";
-       	text += Integer.toString(milliseconds);
+        text += df.format(minutes) + ":";
+        text += df.format(seconds) + ":";
+        text += Integer.toString(milliseconds);
         
         setText(text);
+        
+        setGameTime(minutes, seconds, milliseconds);
     }
-
+    
+    private void setGameTime(int minutes, int seconds, int milliseconds) {
+        gameTimeArray[0] = this.minutes;
+        gameTimeArray[1] = this.seconds;
+        gameTimeArray[2] = this.milliseconds;
+    }
+    
+    int[] getGameTime() {
+        return gameTimeArray;
+    }
+    
     private void updateRunning() {
         boolean running = mVisible && mStarted;
         if (running != mRunning) {
@@ -162,8 +173,7 @@ public class Chronometer extends TextView {
         }
     }
 
-	public long getTimeElapsed() {
-		return timeElapsed;
-	}
-    
+    public long getTimeElapsed() {
+        return timeElapsed;
+    }
 }
