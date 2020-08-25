@@ -10,10 +10,12 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 import android.util.AttributeSet;
-import android.widget.TextView;
+
+import androidx.appcompat.widget.AppCompatTextView;
+
 import java.text.DecimalFormat;
 
-public class Chronometer extends TextView {
+public class Chronometer extends AppCompatTextView {
     @SuppressWarnings("unused")
 	private static final String TAG = "Chronometer";
 
