@@ -10,38 +10,44 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 import android.util.AttributeSet;
-import android.widget.TextView;
+
+import androidx.appcompat.widget.AppCompatTextView;
+
 import java.text.DecimalFormat;
 
-public class Chronometer extends TextView {
+public class Chronometer extends AppCompatTextView {
     @SuppressWarnings("unused")
-	private static final String TAG = "Chronometer";
-
-    public interface OnChronometerTickListener {
-
-        void onChronometerTick(Chronometer chronometer);
-    }
-
+    private static final String TAG = "Chronometer";
+    private static final int TICK_WHAT = 2;
+    private static final int MILLIS_DIGIT_COUNT = 2;
+    private static final int DELAY_MILLIS = 1000 / (int) Math.pow(10, MILLIS_DIGIT_COUNT);
     private long mBase;
     private boolean mVisible;
     private boolean mStarted;
     private boolean mRunning;
     private OnChronometerTickListener mOnChronometerTickListener;
-
-    private static final int TICK_WHAT = 2;
-
     private long timeElapsed;
-    
+    private Handler mHandler = new Handler() {
+        public void handleMessage(Message m) {
+            if (mRunning) {
+                updateText(SystemClock.elapsedRealtime());
+                dispatchChronometerTick();
+                sendMessageDelayed(Message.obtain(this, TICK_WHAT),
+                        DELAY_MILLIS);
+            }
+        }
+    };
+
     public Chronometer(Context context) {
-        this (context, null, 0);
+        this(context, null, 0);
     }
 
     public Chronometer(Context context, AttributeSet attrs) {
-        this (context, attrs, 0);
+        this(context, attrs, 0);
     }
 
     public Chronometer(Context context, AttributeSet attrs, int defStyle) {
-        super (context, attrs, defStyle);
+        super(context, attrs, defStyle);
 
         init();
     }
@@ -51,23 +57,23 @@ public class Chronometer extends TextView {
         updateText(mBase);
     }
 
+    public long getBase() {
+        return mBase;
+    }
+
     public void setBase(long base) {
         mBase = base;
         dispatchChronometerTick();
         updateText(SystemClock.elapsedRealtime());
     }
 
-    public long getBase() {
-        return mBase;
+    public OnChronometerTickListener getOnChronometerTickListener() {
+        return mOnChronometerTickListener;
     }
 
     public void setOnChronometerTickListener(
             OnChronometerTickListener listener) {
         mOnChronometerTickListener = listener;
-    }
-
-    public OnChronometerTickListener getOnChronometerTickListener() {
-        return mOnChronometerTickListener;
     }
 
     public void start() {
@@ -88,44 +94,50 @@ public class Chronometer extends TextView {
 
     @Override
     protected void onDetachedFromWindow() {
-        super .onDetachedFromWindow();
+        super.onDetachedFromWindow();
         mVisible = false;
         updateRunning();
     }
 
     @Override
     protected void onWindowVisibilityChanged(int visibility) {
-        super .onWindowVisibilityChanged(visibility);
+        super.onWindowVisibilityChanged(visibility);
         mVisible = visibility == VISIBLE;
         updateRunning();
     }
 
     private synchronized void updateText(long now) {
         timeElapsed = now - mBase;
-        
+
         DecimalFormat df = new DecimalFormat("00");
-        
-        int hours = (int)(timeElapsed / (3600 * 1000));
-        int remaining = (int)(timeElapsed % (3600 * 1000));
-        
-        int minutes = (int)(remaining / (60 * 1000));
-        remaining = (int)(remaining % (60 * 1000));
-        
-        int seconds = (int)(remaining / 1000);
-        remaining = (int)(remaining % (1000));
-        
-        int milliseconds = (int)(((int)timeElapsed % 1000) / 100);
-        
-        String text = "";
-        
-        if (hours > 0) {
-        	text += df.format(hours) + ":";
+
+        int hours = (int) (timeElapsed / (3600 * 1000));
+        int remaining = (int) (timeElapsed % (3600 * 1000));
+
+        int minutes = (int) (remaining / (60 * 1000));
+        remaining = (int) (remaining % (60 * 1000));
+
+        int seconds = (int) (remaining / 1000);
+        remaining = (int) (remaining % (1000));
+
+        int milliseconds = (int) (((int) timeElapsed % 1000) / DELAY_MILLIS);
+
+        StringBuilder millisFormatPatter = new StringBuilder();
+        for (int i = 0; i < MILLIS_DIGIT_COUNT; i++) {
+            millisFormatPatter.append("0");
         }
-        
-       	text += df.format(minutes) + ":";
-       	text += df.format(seconds) + ":";
-       	text += Integer.toString(milliseconds);
-        
+        DecimalFormat millisFormat = new DecimalFormat(millisFormatPatter.toString());
+
+        String text = "";
+
+        if (hours > 0) {
+            text += df.format(hours) + ":";
+        }
+
+        text += df.format(minutes) + ":";
+        text += df.format(seconds) + ":";
+        text += millisFormat.format(milliseconds);
+
         setText(text);
     }
 
@@ -136,7 +148,7 @@ public class Chronometer extends TextView {
                 updateText(SystemClock.elapsedRealtime());
                 dispatchChronometerTick();
                 mHandler.sendMessageDelayed(Message.obtain(mHandler,
-                        TICK_WHAT), 100);
+                        TICK_WHAT), DELAY_MILLIS);
             } else {
                 mHandler.removeMessages(TICK_WHAT);
             }
@@ -144,25 +156,19 @@ public class Chronometer extends TextView {
         }
     }
 
-    private Handler mHandler = new Handler() {
-        public void handleMessage(Message m) {
-            if (mRunning) {
-                updateText(SystemClock.elapsedRealtime());
-                dispatchChronometerTick();
-                sendMessageDelayed(Message.obtain(this , TICK_WHAT),
-                        100);
-            }
-        }
-    };
-
     void dispatchChronometerTick() {
         if (mOnChronometerTickListener != null) {
             mOnChronometerTickListener.onChronometerTick(this);
         }
     }
 
-	public long getTimeElapsed() {
-		return timeElapsed;
-	}
-    
+    public long getTimeElapsed() {
+        return timeElapsed;
+    }
+
+    public interface OnChronometerTickListener {
+
+        void onChronometerTick(Chronometer chronometer);
+    }
+
 }
