@@ -31,6 +31,8 @@ public class Chronometer extends AppCompatTextView {
     private OnChronometerTickListener mOnChronometerTickListener;
 
     private static final int TICK_WHAT = 2;
+    private static final int MILLIS_DIGIT_COUNT = 2;
+    private static final int DELAY_MILLIS = 1000 / (int) Math.pow(10, MILLIS_DIGIT_COUNT);
 
     private long timeElapsed;
     
@@ -116,7 +118,13 @@ public class Chronometer extends AppCompatTextView {
         int seconds = (int)(remaining / 1000);
         remaining = (int)(remaining % (1000));
         
-        int milliseconds = (int)(((int)timeElapsed % 1000) / 100);
+        int milliseconds = (int)(((int)timeElapsed % 1000) / DELAY_MILLIS);
+	    
+	StringBuilder millisFormatPatter = new StringBuilder();
+        for (int i = 0; i < MILLIS_DIGIT_COUNT; i++) {
+            millisFormatPatter.append("0");
+        }
+        DecimalFormat millisFormat = new DecimalFormat(millisFormatPatter.toString());
         
         String text = "";
         
@@ -126,7 +134,7 @@ public class Chronometer extends AppCompatTextView {
         
        	text += df.format(minutes) + ":";
        	text += df.format(seconds) + ":";
-       	text += Integer.toString(milliseconds);
+       	text += millisFormat.format(milliseconds);
         
         setText(text);
     }
@@ -138,7 +146,7 @@ public class Chronometer extends AppCompatTextView {
                 updateText(SystemClock.elapsedRealtime());
                 dispatchChronometerTick();
                 mHandler.sendMessageDelayed(Message.obtain(mHandler,
-                        TICK_WHAT), 100);
+                        TICK_WHAT), DELAY_MILLIS);
             } else {
                 mHandler.removeMessages(TICK_WHAT);
             }
@@ -152,7 +160,7 @@ public class Chronometer extends AppCompatTextView {
                 updateText(SystemClock.elapsedRealtime());
                 dispatchChronometerTick();
                 sendMessageDelayed(Message.obtain(this , TICK_WHAT),
-                        100);
+                        DELAY_MILLIS);
             }
         }
     };
